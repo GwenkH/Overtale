@@ -22,8 +22,10 @@ class Character:
         self._frame = 0
         self._action = 0  #0:idle, 1: attack, 2: block, 3: die
         self.last_update = pygame.time.get_ticks()
-        # self.inventory? aggregation
-
+        
+        self._party = []
+        self._enemies = []
+        
         #generate idle images
         action_list = []
         for image in range(4):
@@ -38,7 +40,20 @@ class Character:
         print(self.get_type())
 
     def get_health() -> int:
+         """Returns character current health
+        
+        Returns: 
+            int: the character's current health
+        """
         return(self.max_health)
+    
+    def get_max_health(self) -> int:
+        """Returns character max health
+        
+        Returns: 
+            int: the character's max health
+        """
+        return(self._max_health)
     
     def take_damage(self, amount: int) -> None:
         """Makes the character lose health by damage
@@ -48,10 +63,12 @@ class Character:
         """
         if amount > self._health:
             self._health = 0
+            print("i am slain :Q")
             self._alive = False
-
-        if amount > self._health:
+        else:
             self._health -= amount
+            print(self._health)
+            print("ow")
 
     def set_shield(self, amount: int) -> None:
         """Changes the character's shield amount
@@ -60,6 +77,11 @@ class Character:
             amount (int): the amount that the character's shield gains or loses
         """
         self._shield += amount
+        
+    def do_shield(self) -> None:
+        """Uses shield ability"""
+        self._abilities[2](self)
+
 
     def get_type(self) -> str:
         """Returns the character type as a string.
@@ -85,7 +107,7 @@ class Character:
         """
         return self._rect
 
-    def update(self) -> None:  
+    def animate(self) -> None:  
         """Creates character image animation loop."""
         animation_cd = 300
         #update image
@@ -97,7 +119,6 @@ class Character:
         #animation loop reset
         if self._frame >= len(self._animations[self._action]):
             self._frame = 0
-
 
     def define_abilities(self) -> None: 
         """Gives character abilities specified to its type."""
@@ -111,6 +132,7 @@ class Character:
             self._abilities = [
                 Ability.enemy_basic_attack, Ability.enemy_special_attack
             ]
+        self._abilities.append(Ability.shield)
             
     def do_attack(self, target: 'Character', attack: 'Ability') -> None:
         """Does ability on chosen character.
@@ -120,7 +142,8 @@ class Character:
             attack (Ability): the specified ability to use
         """
         self._action = 1
-        attack(target)
+        self._abilities[attack](target)
+        self._action = 0
         
     def open_inventory(self) -> None:  #open menu for items
         pass
