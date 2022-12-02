@@ -57,6 +57,11 @@ class BattleScreen(BaseView):
         self._character_y = 135
         self._ally_position = 0
         self._enemy_position = 0
+        self._health_bar_y = 100
+        
+        #hp bars
+        self._character_hp = HealthBar(self._ally_x[self._ally_position], self._health_bar_y, self._characters[0])
+        self._enemy_hp = HealthBar(self._enemy_x[self._enemy_position], self._health_bar_y, self._enemies[0])
 
 
     def event_loop(self, events: List[pygame.event.Event]) -> None:
@@ -65,40 +70,49 @@ class BattleScreen(BaseView):
                 if event.key == pygame.locals.K_p:
                     """pause"""
                     pass
+                if event.key == pygame.locals.K_e:
+                    self.open_inventory = True
+                    Overtale.set_current_view(Inventory(self))
+
+            if event.type == pygame.locals.MOUSEBUTTONDOWN:
+                if self._enemy_1_area.collidepoint(event.pos):
+                    print("selected target")
+                    self._selected_target = True
+                    player_1 = Player()
+                    target = self._enemies[0]
+                    player_1.set_target(target) # UNDEFINED METHOD
+
+                if self._button_1.collidepoint(event.pos):
+                    print("heavy_hit")
+                    self._characters[0].do_attack(self._enemies[0], 0)
+
+                if self._button_2.collidepoint(event.pos):
+                    print("critical_stab")
+                    self._characters[0].do_attack(self._enemies[0], 1)
+                    
+                if self._button_3.collidepoint(event.pos):
+                    print("shield")
+                    self._characters[0].do_shield()
+                    
+                self._turn += 1
+
+                # if (self._turn % 2) == 1:
+                #     self.attack_phase(self._characters[0], self._enemies[0])
+                #     print("asdfj")
+                        
+    
+                for character in self._characters:
+                    if character.get_health() <= 0:
+                        """run endscreen"""
+                        pass
+
+                for enemy in self._enemies:
+                    if enemy.get_health() <= 0:
+                        pass
     
     def update(self) -> None:
-        if self._enemy_1_area.collidepoint((self._position)):
-            if self._clicked == True:
-                self._clicked_enemy_1 = True
+        pass
         
-        if self._clicked_enemy_1 == True:
-            self._target = self._enemies[0]
-            self._selected_target = True
-            print("selected")
-
-        if self._clicked == True:
-            self._clicked_attack = True
-
-        if self._button_1.collidepoint((self._position)):                                 
-            if self.clicked_attack == True:
-                Ability.heavy_hit(self.target)
-                print("")
-
-        pygame.display.update()
-        if self._button_2.collidepoint((self._position)):
-            if self.clicked_attack:
-                Ability.critical_stab(self, self._target)
-
-        pygame.display.update()
-        if self._button_3.collidepoint((self._position)):
-            if self.clicked_attack:
-                Ability.shield(self)
-
-        pygame.display.update()
-        for member in self._enemies:
-            member.update()
-        for member in self._party:
-            member.update()
 
     def draw(self, surface: pygame.Surface) -> None: 
         """Draws background and characters."""
@@ -115,6 +129,9 @@ class BattleScreen(BaseView):
             character.get_rect().center = (self._ally_x[0], self._character_y)
             surface.blit(character.get_image(),
                                 (self._ally_x[0], self._character_y))
+            
+            character.animate()
+            self._character_hp.draw(surface)
 
             self._ally_position += 1
 
@@ -122,12 +139,19 @@ class BattleScreen(BaseView):
             enemy.get_rect().center = (self._enemy_x[0], self._character_y)
             surface.blit(enemy.get_image(),
                                 (self._enemy_x[0], self._character_y))
+            
+            enemy.animate()
+            self._enemy_hp.draw(surface)
 
-            self._enemy_position += 1
-
-
-        pygame.display.update()
-
+            self._enemy_position += 
+            
+    def get_turn(self) -> int: 
+        """Returns current turn number
+        
+        Returns:
+            int: the current turn number
+        """
+        return self._turn
 
     def attack_phase(self, target: Character, target_enemy: Character) -> None:
         """makes turns and dictates who attacks each turn
@@ -199,6 +223,8 @@ class HealthBar:
         Returns:
             None
         '''
+        self._hp = self._character.get_health()
+        
         pygame.draw.rect(self.screen, RED,
                          (self._x, self._y, self._max_hp, 20))  #Red bar
 
@@ -206,52 +232,16 @@ class HealthBar:
             self.screen, GREEN,
             (self._x, self._y,
              (self._hp / self.max_hp) * self._max_hp, 20))  #Green bar
+        
+        
 
-    # def select_target(self) -> None:  # Esther A2.3
-    #     """select the target"""
-        # # click event
-        # clicked_enemy = False
-        # mx, my = pygame.mouse.get_pos()
-        # self.click_battle()
+class AbilityButtons(BaseView):
+    
+    def __init__ (self, x: int, y: int, character_ability: Character):
+        
+        self._x = x
+        self._y = y
+        self._character = character_ability
+        self._character_ability = character_ability.get_abilities()
+        pass
 
-        # # get enemy area
-        # enemy_1_area = pygame.Rect(388, 155, 30, 100)
-
-        # if enemy_1_area.collidepoint((mx, my)):
-        #     if self.clicked == True:
-        #         clicked_enemy = True
-        #     if clicked_enemy_1 == True:
-        #         self.target = self.clickedenemies[0]
-        #         self.selected_target = True
-        #         print("selected")
-        # pygame.display.update()
-
-    # def hit_attack(self):  # Esther A2.3
-    #     """do damage to the target"""
-    #     pygame.display.update()
-    #     # clicked_attack = False
-    #     # ax, ay = pygame.mouse.get_pos()
-    #     # self.click_battle()
-    #     if self.clicked == True:
-    #         clicked_attack = True
-        # # creat buttons
-        # button_1 = pygame.Rect(0, 0, 30, 30)
-        # button_2 = pygame.Rect(30, 0, 30, 30)
-        # button_3 = pygame.Rect(60, 0, 30, 30)
-
-        # button click conditions
-        # if button_1.collidepoint((ax, ay)):
-        #     if clicked_attack == True:
-        #         Ability.heavy_hit(self.target)
-        #         print("do damage")
-
-        # pygame.display.update()
-        # if button_2.collidepoint((ax, ay)):
-        #     if clicked_attack:
-        #         Ability.critical_stab(self, self.target)
-
-        # pygame.display.update()
-        # if button_3.collidepoint((ax, ay)):
-        #     if clicked_attack:
-        #         Ability.shield(self)
-        # pygame.display.update()
